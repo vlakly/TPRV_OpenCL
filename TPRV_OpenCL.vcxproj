@@ -136,7 +136,12 @@
     <ClInclude Include="MATRIX.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="image_processing.cpp" />
+    <ClCompile Include="image_processing.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="matrix_multiplication.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="gauss_filter.cl" />

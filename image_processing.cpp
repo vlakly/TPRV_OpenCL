@@ -7,12 +7,10 @@
 // Result images are stored in ../images/result
 
 #include <iostream>
+#include <stdio.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/utils/logger.hpp>
-#include <stdio.h>
-#include <stdint.h>
 #include <chrono>
-#include <ctime>
 #include <CL/cl.hpp>
 #include <fstream>
 
@@ -64,6 +62,7 @@ int main() {
     double t_cpu_avg = 0;
     double t_opencl_avg = 0;
 
+    // pass file to string
     std::string kernel_file = "gauss_filter.cl";
     std::ifstream ifs{ kernel_file };
     if (!ifs) {
@@ -72,7 +71,7 @@ int main() {
     }
     std::string kernel_code((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
-    //get all platforms (drivers)
+    // get all platforms (platforms = drivers for each technology, i.e. amd, nvidia or intel)
     std::vector<cl::Platform> all_platforms;
     cl::Platform::get(&all_platforms);
     if (all_platforms.size() == 0) {
@@ -82,7 +81,7 @@ int main() {
     cl::Platform default_platform = all_platforms[0];
     std::cout << "Using platform: " << default_platform.getInfo<CL_PLATFORM_NAME>() << "\n";
 
-    //get default device of the default platform
+    // get default device of the default platform
     std::vector<cl::Device> all_devices;
     default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
     if (all_devices.size() == 0) {
@@ -92,13 +91,15 @@ int main() {
     cl::Device default_device = all_devices[0];
     std::cout << "Using device: " << default_device.getInfo<CL_DEVICE_NAME>() << "\n";
 
+    // context is managing command queues, memory, program and kernel objects on devices inside this context
     cl::Context context({ default_device });
-    std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
 
+    //std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
     //int num;
     //devices[0].getInfo(CL_DEVICE_MAX_COMPUTE_UNITS, &num);
     //cout << "\nMultiprocessors: " << num << "\n\n";
 
+    // object containing kernel code
     cl::Program::Sources sources;
 
     sources.push_back({ kernel_code.c_str(),kernel_code.length() });
@@ -130,7 +131,6 @@ int main() {
         // create buffers on the device
         int image_size = input.size().area() * sizeof(char);
         int filter_size = g_size * g_size * sizeof(float);
-
         cl::Buffer g_filter(context, CL_MEM_READ_WRITE, filter_size);
         cl::Buffer image_in(context, CL_MEM_READ_WRITE, image_size);
         cl::Buffer image_out(context, CL_MEM_READ_WRITE, image_size);
@@ -138,11 +138,9 @@ int main() {
         //create queue to which we will push commands for the device.
         cl::CommandQueue queue(context, default_device);
 
-        //write arrays A and B to the device
         queue.enqueueWriteBuffer(g_filter, CL_TRUE, 0, filter_size, gaussian_filter);
         queue.enqueueWriteBuffer(image_in, CL_TRUE, 0, image_size, gray_input.data);
 
-        //alternative way to run the kernel
         cl::Kernel kernel_add = cl::Kernel(program, "opencl_processing");
         kernel_add.setArg(0, g_filter);
         kernel_add.setArg(1, image_in);

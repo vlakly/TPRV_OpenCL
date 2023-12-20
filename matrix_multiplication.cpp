@@ -22,10 +22,6 @@ uint32_t mat_b[m_size * m_size];
 uint32_t mat_SCALAR[m_size * m_size];
 uint32_t mat_CL[m_size * m_size];
 
-//const char* kernel_string =
-//""
-//"}";
-
 int main() {
     chrono::time_point<chrono::system_clock> t_start;
     chrono::time_point<chrono::system_clock> t_end;
@@ -92,11 +88,9 @@ int main() {
     //create queue to which we will push commands for the device.
     cl::CommandQueue queue(context, default_device);
 
-    //write arrays A and B to the device
     queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, buffer_size, mat_a);
     queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, buffer_size, mat_b);
 
-    //alternative way to run the kernel
     cl::Kernel kernel_add = cl::Kernel(program, "matrix_mult");
     kernel_add.setArg(0, buffer_A);
     kernel_add.setArg(1, buffer_B);
